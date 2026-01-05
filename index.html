@@ -1,36 +1,36 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" id="mainHtml">
+<html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام وصيتي المطور | MY WILL PRO</title>
-    
+    <title>وصيتي السحابية | My Will Cloud</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Amiri:wght@700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Amiri:wght@700&display=swap"
+        rel="stylesheet">
 
     <style>
-        :root {
-            --primary: #3b82f6;
-            --accent: #fbbf24;
-        }
-
         body {
             font-family: 'Cairo', sans-serif;
             background: #020617;
             color: #f8fafc;
             min-height: 100vh;
-            overflow-x: hidden;
             margin: 0;
+            overflow-x: hidden;
         }
 
-        /* خلفية إسلامية متحركة */
+        /* خلفية النجوم المتحركة */
         .islamic-bg {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
             z-index: -1;
-            overflow: hidden;
         }
 
         .star {
@@ -38,321 +38,274 @@
             background: white;
             border-radius: 50%;
             opacity: 0.3;
-            animation: pulse 4s infinite ease-in-out;
+            animation: blink 3s infinite ease-in-out;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.3; }
-            50% { transform: scale(1.5); opacity: 0.7; }
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.3);
+            }
         }
 
-        /* التصميم الزجاجي */
+        /* تصميم الزجاج (Glassmorphism) */
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 2rem;
+            border-radius: 1.5rem;
         }
 
         .glass-input {
             background: rgba(0, 0, 0, 0.3) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             color: white !important;
-            border-radius: 1rem;
+            border-radius: 0.75rem;
+            padding: 0.8rem;
+            width: 100%;
+            outline: none;
             transition: 0.3s;
         }
 
         .glass-input:focus {
-            border-color: var(--primary) !important;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            border-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
         }
 
-        .quran-font { font-family: 'Amiri', serif; }
-
-        .btn-grad {
-            background: linear-gradient(90deg, #1e40af, #3b82f6);
-            transition: 0.4s;
-        }
-        .btn-grad:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        .btn-islamic {
+            background: linear-gradient(135deg, #b45309, #f59e0b);
+            color: white;
+            font-weight: bold;
+            transition: 0.3s;
+            border-radius: 0.75rem;
         }
 
-        /* إخفاء العناصر */
-        .hidden { display: none !important; }
-        
-        /* تحسين التمرير */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #020617; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        .btn-islamic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .quran-font {
+            font-family: 'Amiri', serif;
+        }
     </style>
 </head>
+
 <body>
 
-    <div class="islamic-bg" id="stars-container"></div>
+    <div class="islamic-bg" id="starfield"></div>
 
-    <div class="fixed top-6 left-6 right-6 z-50 flex justify-between items-center">
-        <button onclick="openM('settingsModal')" class="glass p-3 px-5 flex items-center gap-2 hover:bg-white/5 transition">
-            ⚙️ <span data-key="settings">الإعدادات</span>
-        </button>
-        <button onclick="openM('adminAuthModal')" class="glass p-3 px-5 border-amber-500/30 text-amber-500 hover:bg-amber-500/10 transition">
-            🛡️ <span data-key="admin_gate">بوابة المشرف</span>
-        </button>
-    </div>
+    <nav class="fixed top-0 w-full z-50 p-4 flex justify-between items-center bg-black/20 backdrop-blur-md">
+        <button onclick="showAdminAuth()" class="text-amber-500 font-bold hover:opacity-80">🛡️ بوابة المشرف</button>
+        <h1 class="text-xl font-black quran-font tracking-widest">وَصِيَّتِي</h1>
+        <button onclick="location.reload()" class="text-sm opacity-60">الرئيسية</button>
+    </nav>
 
-    <main class="container mx-auto px-4 py-24 min-h-screen flex items-center justify-center">
-        
-        <div id="v-welcome" class="max-w-4xl w-full glass p-12 text-center space-y-8 animate-in fade-in duration-700">
-            <div class="mb-6 opacity-50">🌙</div>
-            <h1 class="text-7xl md:text-9xl font-black text-white quran-font tracking-widest" data-key="title">وَصِيَّتِي</h1>
-            <p class="text-2xl md:text-3xl leading-relaxed quran-font text-blue-100/80" data-key="verse">
+    <div class="container mx-auto px-4 pt-24 pb-10 flex items-center justify-center min-h-screen">
+
+        <div id="screen-welcome"
+            class="max-w-2xl w-full glass p-10 text-center space-y-8 animate-in fade-in duration-700">
+            <div class="text-5xl opacity-30">🌙</div>
+            <h2 class="text-6xl md:text-8xl font-black quran-font text-white">وَصِيَّتِي</h2>
+            <p class="text-xl md:text-2xl quran-font text-blue-100/70 leading-relaxed">
                 ﴿كُتِبَ عَلَيْكُمْ إِذَا حَضَرَ أَحَدَكُمُ الْمَوْتُ إِنْ تَرَكَ خَيْرًا الْوَصِيَّةُ﴾
             </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-                <button onclick="navTo('v-register')" class="btn-grad py-6 rounded-3xl text-2xl font-bold shadow-2xl" data-key="create_account">إنشاء حساب جديد</button>
-                <button onclick="navTo('v-login')" class="glass py-6 rounded-3xl text-2xl font-bold hover:bg-white/10 transition" data-key="login">تسجيل الدخول</button>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button onclick="showScreen('screen-register')" class="btn-islamic px-10 py-4 text-lg">إنشاء
+                    حساب</button>
+                <button onclick="showScreen('screen-login')" class="glass px-10 py-4 text-lg hover:bg-white/5">تسجيل
+                    الدخول</button>
             </div>
         </div>
 
-        <div id="v-register" class="hidden max-w-lg w-full glass p-10 relative">
-            <button onclick="navTo('v-welcome')" class="absolute top-6 right-6 text-blue-400 font-bold">✕ <span data-key="back">رجوع</span></button>
-            <h2 class="text-3xl font-bold mb-8 text-center" data-key="create_account">عضوية جديدة</h2>
-            <div class="space-y-5">
-                <input id="r-name" type="text" class="glass-input w-full p-4 outline-none" data-key-p="p_name">
-                <input id="r-pass" type="password" class="glass-input w-full p-4 outline-none" data-key-p="p_pass">
-                <p id="err-pass" class="text-red-400 text-xs hidden">ضعيفة! (حرف + رقم + 5 خانات)</p>
-                <input id="r-phone" type="tel" class="glass-input w-full p-4 outline-none" data-key-p="p_phone">
-                <p id="err-phone" class="text-red-400 text-xs hidden">يجب أن يكون 10 أرقام</p>
-                <input id="r-emg" type="tel" class="glass-input w-full p-4 outline-none" data-key-p="p_emg">
-                <button onclick="actRegister()" class="w-full py-5 btn-grad rounded-2xl font-bold text-xl" data-key="confirm_reg">تأكيد التسجيل</button>
-            </div>
+        <div id="screen-register" class="hidden max-w-md w-full glass p-8 space-y-4">
+            <h2 class="text-2xl font-bold text-center text-amber-500">عضوية جديدة</h2>
+            <input id="reg-name" type="text" placeholder="الاسم الكامل" class="glass-input">
+            <input id="reg-pass" type="password" placeholder="كلمة السر" class="glass-input">
+            <input id="reg-phone" type="tel" placeholder="رقم الجوال" class="glass-input">
+            <button onclick="handleRegister()" class="w-full btn-islamic py-3">تأكيد وانطلاق</button>
+            <button onclick="showScreen('screen-welcome')" class="w-full text-xs opacity-40">رجوع</button>
         </div>
 
-        <div id="v-login" class="hidden max-w-md w-full glass p-10 relative">
-            <button onclick="navTo('v-welcome')" class="absolute top-6 right-6 text-blue-400 font-bold">✕</button>
-            <h2 class="text-3xl font-bold mb-8 text-center" data-key="login">دخول</h2>
-            <div class="space-y-6">
-                <input id="l-name" type="text" class="glass-input w-full p-4 outline-none" data-key-p="p_name">
-                <input id="l-pass" type="password" class="glass-input w-full p-4 outline-none" data-key-p="p_pass">
-                <button onclick="actLogin()" class="w-full py-5 btn-grad rounded-2xl font-bold text-xl" data-key="enter">دخول</button>
-            </div>
+        <div id="screen-login" class="hidden max-w-md w-full glass p-8 space-y-4">
+            <h2 class="text-2xl font-bold text-center text-amber-500">مرحباً بعودتك</h2>
+            <input id="log-name" type="text" placeholder="الاسم" class="glass-input">
+            <input id="log-pass" type="password" placeholder="كلمة السر" class="glass-input">
+            <button onclick="handleLogin()" class="w-full btn-islamic py-3">دخول</button>
+            <button onclick="showScreen('screen-welcome')" class="w-full text-xs opacity-40">نسيت البيانات؟</button>
         </div>
 
-        <div id="v-dash" class="hidden max-w-6xl w-full glass p-10 mt-10">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 border-b border-white/10 pb-8">
+        <div id="screen-dash" class="hidden max-w-5xl w-full glass p-8 space-y-8">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <h2 class="text-2xl font-bold">وصية: <span id="user-display" class="text-amber-500"></span></h2>
+                <button onclick="location.reload()"
+                    class="bg-red-900/40 text-red-200 px-4 py-1 rounded text-xs">خروج</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <h2 class="text-4xl font-black"><span data-key="welcome"></span>، <span id="u-head" class="text-blue-400"></span></h2>
+                    <label class="block text-sm mb-2 opacity-60 italic">الديون والحقوق</label>
+                    <textarea id="w1" class="glass-input h-32"></textarea>
                 </div>
-                <div class="flex gap-4">
-                    <button onclick="exportPDF()" class="p-4 glass bg-blue-600/20 hover:bg-blue-600/40 rounded-2xl transition">📄 PDF</button>
-                    <button onclick="logout()" class="p-4 bg-red-600/20 hover:bg-red-600/50 rounded-2xl transition" data-key="logout">خروج</button>
+                <div>
+                    <label class="block text-sm mb-2 opacity-60 italic">الأمانات</label>
+                    <textarea id="w2" class="glass-input h-32"></textarea>
                 </div>
-            </div>
-            
-            <div id="pdf-content" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-2">
-                    <label class="font-bold flex items-center gap-2">💰 <span data-key="w_debts"></span></label>
-                    <textarea id="w1" class="glass-input w-full p-5 h-40 resize-none"></textarea>
-                </div>
-                <div class="space-y-2">
-                    <label class="font-bold flex items-center gap-2">🏠 <span data-key="w_assets"></span></label>
-                    <textarea id="w2" class="glass-input w-full p-5 h-40 resize-none"></textarea>
-                </div>
-                <div class="space-y-2">
-                    <label class="font-bold flex items-center gap-2">🎁 <span data-key="w_trusts"></span></label>
-                    <textarea id="w3" class="glass-input w-full p-5 h-40 resize-none"></textarea>
-                </div>
-                <div class="space-y-2">
-                    <label class="font-bold flex items-center gap-2">🕌 <span data-key="w_religion"></span></label>
-                    <textarea id="w4" class="glass-input w-full p-5 h-40 resize-none"></textarea>
-                </div>
-                <div class="md:col-span-2 space-y-2">
-                    <label class="font-bold flex items-center gap-2">✍️ <span data-key="w_other"></span></label>
-                    <textarea id="w5" class="glass-input w-full p-5 h-56 resize-none"></textarea>
+                <div class="md:col-span-2">
+                    <label class="block text-sm mb-2 opacity-60 italic">رسالتي الأخيرة للأهل والأحباب</label>
+                    <textarea id="w5" class="glass-input h-48"></textarea>
                 </div>
             </div>
-            <button onclick="actSave()" class="w-full mt-10 py-6 btn-grad rounded-3xl font-black text-2xl" data-key="save_will">حفظ الوصية</button>
+            <button onclick="handleSaveWill()" class="w-full btn-islamic py-4 text-xl shadow-lg">حفظ وصيتي في السحابة
+                🔒</button>
         </div>
 
-        <div id="v-admin" class="hidden max-w-7xl w-full space-y-8 animate-in slide-in-from-bottom-10 duration-500">
-            <div class="glass p-8 flex justify-between items-center border-r-8 border-amber-500">
-                <h2 class="text-4xl font-black text-amber-500" data-key="admin_panel">الإدارة المركزية</h2>
-                <button onclick="logout()" class="px-8 py-3 bg-red-600 rounded-xl font-bold" data-key="logout">خروج</button>
+        <div id="screen-admin" class="hidden max-w-6xl w-full space-y-6">
+            <div class="glass p-6 flex justify-between items-center border-l-4 border-amber-500">
+                <h2 class="text-2xl font-bold text-amber-500">سجل الوصايا المركزية</h2>
+                <span id="user-count" class="bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full text-xs">0
+                    مستخدم</span>
             </div>
-            <div id="admin-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                </div>
-        </div>
-
-    </main>
-
-    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-xl hidden z-[100] flex items-center justify-center p-6">
-        <div class="glass max-w-sm w-full p-8 space-y-6">
-            <div class="flex justify-between items-center"><h3 class="text-xl font-bold">⚙️</h3><button onclick="closeM('settingsModal')" class="text-2xl">✕</button></div>
-            <select id="langS" onchange="setL(this.value)" class="w-full p-4 glass-input outline-none cursor-pointer">
-                <option value="ar">العربية</option><option value="en">English</option><option value="he">עברית</option>
-            </select>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="document.body.style.filter='grayscale(0)'" class="p-4 glass rounded-xl">ملون</button>
-                <button onclick="document.body.style.filter='grayscale(0.8)'" class="p-4 glass rounded-xl">هادئ</button>
+            <div id="admin-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             </div>
         </div>
     </div>
 
-    <div id="adminAuthModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl hidden z-[100] flex items-center justify-center p-6">
-        <div class="glass max-w-md w-full p-10 text-center space-y-6">
-            <h3 class="text-2xl font-bold text-amber-500" data-key="admin_auth">دخول الإدارة</h3>
-            <input id="adminKey" type="password" class="glass-input w-full p-5 text-center text-4xl tracking-widest outline-none" placeholder="****">
-            <div class="flex gap-4">
-                <button onclick="actVerifyAdmin()" class="flex-1 py-5 btn-grad rounded-2xl font-bold">دخول</button>
-                <button onclick="closeM('adminAuthModal')" class="flex-1 py-5 glass rounded-2xl">إلغاء</button>
-            </div>
+    <div id="modal-admin" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-6">
+        <div class="glass max-w-xs w-full p-8 text-center space-y-5 border-amber-500/40">
+            <h3 class="font-bold">دخول الإدارة</h3>
+            <input id="admin-key" type="password" class="glass-input text-center text-xl tracking-tighter"
+                placeholder="أدخل الرمز">
+            <button onclick="verifyAdmin()" class="w-full btn-islamic py-3">تحقق</button>
+            <button onclick="closeAdmin()" class="text-xs opacity-50">إلغاء</button>
         </div>
     </div>
 
     <script>
-        const KEY = "26112027";
-        let user = null;
-        let lang = 'ar';
-
-        const DICT = {
-            ar: {
-                settings: "الإعدادات", title: "وَصِيَّتِي", verse: "﴿كُتِبَ عَلَيْكُمْ إِذَا حَضَرَ أَحَدَكُمُ الْمَوْتُ إِنْ تَرَكَ خَيْرًا الْوَصِيَّةُ﴾",
-                create_account: "إنشاء حساب", login: "دخول", back: "رجوع", p_name: "الاسم الكامل",
-                p_pass: "كلمة السر (حرف+رقم)", p_phone: "الجوال (10 أرقام)", p_emg: "رقم الطوارئ", confirm_reg: "تأكيد وإنشاء",
-                admin_gate: "المشرف", admin_auth: "رمز المشرف", enter: "دخول", cancel: "إلغاء", welcome: "مرحباً",
-                logout: "خروج", save_will: "حفظ الوصية الآن", w_debts: "الديون والالتزامات", w_assets: "الممتلكات وتوزيعها",
-                w_trusts: "الأمانات والودائع", w_religion: "كفارات ونذور", w_other: "وصايا أخرى ورسائل", 
-                admin_panel: "لوحة الإدارة", save_ok: "تم حفظ بياناتك في السيرفر!"
-            },
-            en: {
-                settings: "Settings", title: "MY WILL", verse: "It is prescribed for you, when death approaches any of you...",
-                create_account: "Register", login: "Login", back: "Back", p_name: "Full Name",
-                p_pass: "Password", p_phone: "Phone", p_emg: "Emergency", confirm_reg: "Confirm",
-                admin_gate: "Admin", admin_auth: "Admin Access", enter: "Enter", cancel: "Cancel", welcome: "Welcome",
-                logout: "Logout", save_will: "Save Will", w_debts: "Debts", w_assets: "Assets",
-                w_trusts: "Trusts", w_religion: "Religion", w_other: "Extra Wishes", admin_panel: "Admin Panel", save_ok: "Saved!"
-            }
-            // يمكن إضافة العبري بنفس الطريقة هنا..
+        // دمج مفاتيح الربط التي أرسلتها في الصورة
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLizdshv4FlWjaD4tGE5vsMZm_5c8nrVw",
+            authDomain: "will-before-martyrdom.firebaseapp.com",
+            projectId: "will-before-martyrdom",
+            storageBucket: "will-before-martyrdom.firebasestorage.app",
+            messagingSenderId: "300966916292",
+            appId: "1:300966916292:web:80c0c081d10e051217d991",
+            measurementId: "G-0PTJ1T0RBD"
         };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let currentUser = null;
 
-        // النجوم المتحركة
-        function createStars() {
-            const container = document.getElementById('stars-container');
-            for(let i=0; i<100; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                const size = Math.random() * 3 + 'px';
-                star.style.width = size; star.style.height = size;
-                star.style.top = Math.random() * 100 + '%';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(star);
-            }
-        }
-
-        // الملاحة
-        function navTo(id) {
-            document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
+        function showScreen(id) {
+            document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
         }
-        function openM(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeM(id) { document.getElementById(id).classList.add('hidden'); }
 
-        function setL(l) {
-            lang = l;
-            document.getElementById('mainHtml').dir = (l === 'en') ? 'ltr' : 'rtl';
-            const d = DICT[l];
-            document.querySelectorAll('[data-key]').forEach(el => el.innerText = d[el.dataset.key]);
-            document.querySelectorAll('[data-key-p]').forEach(el => el.placeholder = d[el.dataset.keyP]);
-            closeM('settingsModal');
-        }
+        function showAdminAuth() { document.getElementById('modal-admin').classList.remove('hidden'); }
+        function closeAdmin() { document.getElementById('modal-admin').classList.add('hidden'); }
 
-        // التسجيل
-        function actRegister() {
-            const n = document.getElementById('r-name').value;
-            const p = document.getElementById('r-pass').value;
-            const ph = document.getElementById('r-phone').value;
-            const em = document.getElementById('r-emg').value;
+        // نظام التسجيل المباشر في Firebase
+        function handleRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+            const phone = document.getElementById('reg-phone').value;
 
-            if(!/[a-zA-Z]/.test(p) || !/\d/.test(p) || p.length < 5) {
-                return document.getElementById('err-pass').classList.remove('hidden');
+            if (name && pass) {
+                db.ref('users/' + name).set({
+                    name, pass, phone,
+                    will: { w1: '', w2: '', w5: '' }
+                }).then(() => {
+                    alert("تم حفظ حسابك في قاعدة البيانات السحابية ✅");
+                    showScreen('screen-login');
+                });
             }
-            if(ph.length !== 10) return document.getElementById('err-phone').classList.remove('hidden');
-
-            const uData = { name: n, pass: p, phone: ph, emg: em, will: {} };
-            localStorage.setItem('WILL_USER_' + n, JSON.stringify(uData));
-            alert("تم التسجيل!"); navTo('v-login');
         }
 
-        // الدخول
-        function actLogin() {
-            const n = document.getElementById('l-name').value;
-            const p = document.getElementById('l-pass').value;
-            const data = localStorage.getItem('WILL_USER_' + n);
+        // نظام تسجيل الدخول والتحقق من Firebase
+        function handleLogin() {
+            const name = document.getElementById('log-name').value.trim();
+            const pass = document.getElementById('log-pass').value;
 
-            if(data && JSON.parse(data).pass === p) {
-                user = JSON.parse(data);
-                document.getElementById('u-head').innerText = user.name;
-                for(let i=1; i<=5; i++) document.getElementById('w'+i).value = user.will['w'+i] || '';
-                navTo('v-dash');
-            } else alert("خطأ!");
+            db.ref('users/' + name).once('value').then((snapshot) => {
+                const data = snapshot.val();
+                if (data && data.pass === pass) {
+                    currentUser = data;
+                    document.getElementById('user-display').innerText = data.name;
+                    document.getElementById('w1').value = data.will?.w1 || '';
+                    document.getElementById('w2').value = data.will?.w2 || '';
+                    document.getElementById('w5').value = data.will?.w5 || '';
+                    showScreen('screen-dash');
+                } else {
+                    alert("عذراً، البيانات غير متطابقة.");
+                }
+            });
         }
 
-        function actSave() {
-            for(let i=1; i<=5; i++) user.will['w'+i] = document.getElementById('w'+i).value;
-            localStorage.setItem('WILL_USER_' + user.name, JSON.stringify(user));
-            alert(DICT[lang].save_ok);
+        // حفظ الوصية في Firebase
+        function handleSaveWill() {
+            const updates = {
+                w1: document.getElementById('w1').value,
+                w2: document.getElementById('w2').value,
+                w5: document.getElementById('w5').value
+            };
+            db.ref('users/' + currentUser.name + '/will').update(updates).then(() => {
+                alert("تم تحديث وصيتك في السحابة بنجاح ✅");
+            });
         }
 
-        // --- إصلاح دخول المشرف ---
-        function actVerifyAdmin() {
-            const val = document.getElementById('adminKey').value;
-            if (val === KEY) {
-                closeM('adminAuthModal');
-                renderAdmin();
-                navTo('v-admin');
-            } else alert("الرمز خاطئ!");
+        // لوحة المشرف (تصل لكل البيانات في Firebase)
+        function verifyAdmin() {
+            if (document.getElementById('admin-key').value === "26112027") {
+                closeAdmin();
+                showScreen('screen-admin');
+                loadAllFirebaseData();
+            } else { alert("الرمز خاطئ!"); }
         }
 
-        function renderAdmin() {
-            const grid = document.getElementById('admin-grid');
-            grid.innerHTML = "";
-            let found = 0;
-
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('WILL_USER_')) {
-                    found++;
-                    const u = JSON.parse(localStorage.getItem(key));
-                    grid.innerHTML += `
-                        <div class="glass p-6 border-b-4 border-amber-500 hover:scale-105 transition duration-300">
-                            <h3 class="text-xl font-bold text-amber-400 mb-2">${u.name}</h3>
-                            <div class="text-sm opacity-70 space-y-1">
-                                <p>📞 ${u.phone}</p>
-                                <p>🆘 ${u.emg}</p>
-                                <p class="text-xs text-blue-300">🔑 السر: ${u.pass}</p>
-                            </div>
-                            <div class="mt-4 p-3 bg-black/40 rounded text-xs truncate">
-                                ${u.will.w5 || 'لا يوجد وصايا مضافة بعد'}
+        function loadAllFirebaseData() {
+            const list = document.getElementById('admin-list');
+            db.ref('users').on('value', (snapshot) => {
+                list.innerHTML = '';
+                let count = 0;
+                snapshot.forEach((child) => {
+                    count++;
+                    const u = child.val();
+                    list.innerHTML += `
+                        <div class="glass p-5 border-r-2 border-amber-500">
+                            <h3 class="text-amber-500 font-bold">${u.name}</h3>
+                            <p class="text-[10px] opacity-50 mb-3 italic">الجوال: ${u.phone} | السر: ${u.pass}</p>
+                            <div class="text-[11px] bg-black/40 p-3 rounded leading-relaxed">
+                                <strong>الرسالة:</strong> ${u.will?.w5 || '...'}
                             </div>
                         </div>
                     `;
-                }
-            }
-            if(found === 0) grid.innerHTML = "<p class='col-span-full text-center opacity-50'>لا يوجد مستخدمين مسجلين بعد</p>";
+                });
+                document.getElementById('user-count').innerText = `${count} مستخدم`;
+            });
         }
 
-        function logout() { location.reload(); }
-
-        function exportPDF() {
-            const element = document.getElementById('pdf-content');
-            const opt = { margin: 10, filename: 'will.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            html2pdf().set(opt).from(element).save();
+        // تأثير خلفية النجوم
+        const starfield = document.getElementById('starfield');
+        for (let i = 0; i < 50; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.width = s.style.height = Math.random() * 2 + 'px';
+            s.style.top = Math.random() * 100 + '%';
+            s.style.left = Math.random() * 100 + '%';
+            s.style.animationDelay = Math.random() * 5 + 's';
+            starfield.appendChild(s);
         }
-
-        createStars();
-        setL('ar');
     </script>
 </body>
+
 </html>
